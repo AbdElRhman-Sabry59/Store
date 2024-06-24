@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="store.css" />
+    <title>Pharmacy system</title>
+  </head>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      list-style: none;
+      text-decoration: none;
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    .container {
+      width: 80%;
+      margin: auto;
+      color: white;
+    }
+
+    body {
+      background-color: #333;
+    }
+
+    .head {
+      text-transform: uppercase;
+      text-align: center;
+      padding: 5px;
+    }
+
+    .head h2 {
+      padding: 5px;
+    }
+
+    input {
+      width: 100%;
+      margin: 4px;
+      padding: 5px;
+      outline: none;
+      border: none;
+      height: 30px;
+      border-radius: 5px;
+    }
+
+    input:focus {
+      transform: scale(1.07);
+      background-color: #000;
+      color: white;
+    }
+
+    .price {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      align-self: center;
+      width: 100%;
+    }
+
+    .price input {
+      width: 100%;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      height: 30px;
+      margin: 3px;
+      padding: 5px 10px;
+      background-color: #ce00ffb3;
+      color: white;
+      transition: 0.5s ease;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #ce00ff;
+      letter-spacing: 1px;
+    }
+
+    .btnSearch {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .btnSearch button {
+      width: 45%;
+    }
+    @media (max-width: 710px) {
+      table tr {
+        padding: 5px;
+        display: flex;
+        justify-content: space-around;
+        flex-direction: row;
+        align-items: center;
+        margin: 5px;
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      th,
+      td {
+        padding: 5px;
+        margin: 3px;
+        width: 50px;
+      }
+    }
+    table {
+      width: 100%;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    table th {
+      text-transform: uppercase;
+      background-color: #000;
+      border-radius: 5px;
+    }
+
+    th,
+    td {
+      padding: 5px;
+      margin: 5px;
+      width: 150px;
+    }
+    table td {
+      text-align: center;
+      border: 2px orange solid;
+      padding: 5px;
+    }
+  </style>
+  <body>
+    <div class="container">
+      <div class="head">
+        <p>Pharmacy system</p>
+      </div>
+      <div id="inputs">
+        <input type="text" placeholder="اسم الدواء" id="title" />
+        <div class="price">
+          <input type="text" placeholder="التركيز" id="taxes" />
+          <input type="text" placeholder="الماده الفعاله" id="ads" />
+          <input type="text" placeholder="دواعى الأستخدام" id="discount" />
+          <input type="text" placeholder=" الجرعه الخاصه به" class="z" />
+          <input type="text" placeholder=" البديل " class="x" />
+          <input type="text" placeholder=" المثيل " class="y" />
+        </div>
+      </div>
+      <input type="number" placeholder="عدد المنتجات" id="count" />
+      <input type="text" placeholder="الصنف" id="category" />
+      <button id="submit">Create</button>
+      <div class="outputs">
+        <div class="searchBlock">
+          <input
+            onkeyup="searchData(this.value)"
+            type="text"
+            placeholder="Search"
+            id="search"
+          />
+        </div>
+        <div class="btnSearch">
+          <button onclick="getSearchMood(this.id)" id="searchTitle">
+            البحث بالأسم
+          </button>
+          <button onclick="getSearchMood(this.id)" id="searchCategory">
+            البحث بالصنف
+          </button>
+        </div>
+      </div>
+      <div id="deleteAll"></div>
+      <table>
+        <tr>
+          <th>id</th>
+          <th>اسم الدواء</th>
+          <th>التركيز</th>
+          <th>الماده الفعاله</th>
+          <th>دواعى الأستخدام</th>
+          <th>البديل</th>
+          <th>المثيل</th>
+          <th>الجرعة الخاصة</th>
+          <th>الصنف</th>
+          <th>تعديل</th>
+          <th>حذف</th>
+        </tr>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <script>
+      let title = document.getElementById("title");
+      let price = document.querySelector(".price");
+      let taxes = document.getElementById("taxes");
+      let ads = document.getElementById("ads");
+      let discount = document.getElementById("discount");
+      let x = document.querySelector(".x");
+      let y = document.querySelector(".y");
+      let z = document.querySelector(".z");
+      let count = document.getElementById("count");
+      let category = document.getElementById("category");
+      let submit = document.getElementById("submit");
+      let mood = "create";
+      let tmp;
+
+      // function createData
+      let dataPro;
+      if (localStorage.product != null) {
+        dataPro = JSON.parse(localStorage.product);
+      } else {
+        dataPro = [];
+      }
+      submit.onclick = function () {
+        let newPro = {
+          title: title.value.toLowerCase(),
+          taxes: taxes.value,
+          ads: ads.value,
+          discount: discount.value,
+          x: x.value,
+          y: y.value,
+          z: z.value,
+          count: count.value,
+          category: category.value.toLowerCase(),
+        };
+        if (title.value != "" && category.value != "" && newPro.count < 100) {
+          // count
+          if (mood === "create") {
+            if (newPro.count > 1) {
+              for (let i = 0; i < newPro.count; i++) {
+                dataPro.push(newPro);
+              }
+            } else {
+              dataPro.push(newPro);
+            }
+          } else {
+            dataPro[tmp] = newPro;
+            mood = "create";
+            submit.innerHTML = "Create";
+            count.style.display = "block";
+          }
+          clearData();
+        }
+        localStorage.setItem("product", JSON.stringify(dataPro));
+        showData();
+      };
+      // function clearData
+      function clearData() {
+        title.value = "";
+        taxes.value = "";
+        ads.value = "";
+        discount.value = "";
+        x.value = "";
+        y.value = "";
+        z.value = "";
+        count.value = "";
+        category.value = "";
+      }
+      // function showData
+      function showData() {
+        let table = "";
+        for (let i = 0; i < dataPro.length; i++) {
+          table += `
+ <tr>
+ <td>${i + 1}</td>
+ <td>${dataPro[i].title}</td>
+ <td>${dataPro[i].taxes}</td>
+ <td>${dataPro[i].ads}</td>
+ <td>${dataPro[i].discount}</td>
+ <td>${dataPro[i].x}</td>
+ <td>${dataPro[i].y}</td>
+ <td>${dataPro[i].z}</td>
+ <td>${dataPro[i].category}</td>
+ <td><button onclick="updateData(${i})" id="update"> تعديل </button></td>
+ <td><button onclick = "deleteData(${i})" id="delete"> حذف </button></td>
+
+ </tr>
+ `;
+        }
+        document.getElementById("tbody").innerHTML = table;
+        let btnDelete = document.getElementById("deleteAll");
+        if (dataPro.length > 0) {
+          btnDelete.innerHTML = `
+ <td><button onclick ="deleteAll()"> حذف الكل حذف  (${dataPro.length})</button></td>
+ `;
+        } else {
+          btnDelete.innerHTML = "";
+        }
+      }
+      showData();
+      // function deleteData
+      function deleteData(i) {
+        dataPro.splice(i, 1);
+        localStorage.product = JSON.stringify(dataPro);
+        showData();
+      }
+      // function deleteAll
+      function deleteAll() {
+        localStorage.clear();
+        dataPro.splice(0);
+        showData();
+      }
+      // function updateData
+      function updateData(i) {
+        title.value = dataPro[i].title;
+        taxes.value = dataPro[i].taxes;
+        ads.value = dataPro[i].ads;
+        discount.value = dataPro[i].discount;
+        category.value = dataPro[i].category;
+        x.value = dataPro[i].x;
+        y.value = dataPro[i].y;
+        z.value = dataPro[i].z;
+        count.style.display = "none";
+        submit.innerHTML = "Update";
+        mood = "update";
+        tmp = i;
+        scroll({
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+      // search mood
+      let searchMood = "title";
+      function getSearchMood(id) {
+        let search = document.getElementById("search");
+        if (id == "searchTitle") {
+          searchMood = "title";
+        } else {
+          searchMood = "category";
+        }
+        search.placeholder = "Search By " + searchMood;
+        search.focus();
+        search.value = "";
+        showData();
+      }
+      function searchData(value) {
+        let table = "";
+        for (let i = 0; i < dataPro.length; i++) {
+          if (searchMood == "title") {
+            // search by title
+            if (dataPro[i].title.includes(value.toLowerCase())) {
+              table += `
+ <tr>
+ 
+ <td>${i + 1}</td>
+ <td>${dataPro[i].title}</td>
+ <td>${dataPro[i].taxes}</td>
+ <td>${dataPro[i].ads}</td>
+ <td>${dataPro[i].discount}</td>
+ <td>${dataPro[i].x}</td>
+ <td>${dataPro[i].y}</td>
+ <td>${dataPro[i].z}</td>
+ <td>${dataPro[i].category}</td>
+ <td><button onclick="updateData(${i})" id="update"> تعديل </button></td>
+ <td><button onclick = "deleteData(${i})" id="delete"> حذف </button></td>
+
+ </tr>
+ `;
+            }
+          } else {
+            // search by category
+            if (dataPro[i].category.includes(value.toLowerCase())) {
+              table += `
+ <tr>
+
+ <td>${i + 1}</td>
+ <td>${dataPro[i].title}</td>
+ <td>${dataPro[i].taxes}</td>
+ <td>${dataPro[i].ads}</td>
+ <td>${dataPro[i].discount}</td>
+ <td>${dataPro[i].x}</td>
+ <td>${dataPro[i].y}</td>
+ <td>${dataPro[i].z}</td>
+ <td>${dataPro[i].category}</td>
+
+ <td><button onclick="updateData(${i})" id="update"> تعديل </button></td>
+ <td><button onclick = "deleteData(${i})" id="delete"> حذف </button></td>
+
+ </tr>
+ `;
+            }
+          }
+        }
+        document.getElementById("tbody").innerHTML = table;
+      }
+    </script>
+    <script src="store.js"></script>
+  </body>
+</html>
